@@ -3,11 +3,10 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 const app = express();
-
+ 
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
-    
-    credential: true
+    credentials: true
 }))
 
 app.use(express.json({limit: "20kb"}))

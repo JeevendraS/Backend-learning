@@ -12,7 +12,7 @@ export {asyncHandler}
 
 // const asyncHandler = () => {}
 // const asyncHandler = (func) => { ()=>{} }
-// const asyncHandler = (func) => async ()=>{} ----- curly braces removed
+// const asyncHandler = (func) => async ()=>{} ----- curly braces removed 
 /*
 const asyncHandler = (func) => async (req, res, next) => {
     try {
