@@ -14,14 +14,14 @@ const uploadOnCloudinary = async (localFilePath) => {
         // upload the file cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto"
-        },functo) 
+        }) 
         console.log("type of localpath", typeof localFilePath)
         // file has been uploaded successfully
         console.log("file is uploaded on cloudinary", response.url);
         fs.unlinkSync(localFilePath)
         return response
     } catch (error) {
-        console.log("upload fail")
+        console.log("upload fail", error)
         fs.unlinkSync(localFilePath)  // remove the locally saved temporery 
                                       //file as the upload operation got failed
     }
