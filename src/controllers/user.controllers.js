@@ -218,17 +218,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const { accessToken, newRefreshToken } =
+    const { accessToken, refreshToken } =
       await generateAccessAndRefreshTokens(user._id);
+    console.log("refreshtoken", refreshToken)  
 
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
         new ApiResponse(
           200,
-          { accessToken, refreshToken: newRefreshToken },
+          { accessToken, refreshToken},
           "Access token refreshed"
         )
       );
@@ -256,9 +257,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = req.user
   return res
     .status(200)
-    .json(200, req.user, "Current user fetched successfully");
+    .json(
+      new ApiResponse(200, req.user, "User details fetched successfully")
+    );
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
