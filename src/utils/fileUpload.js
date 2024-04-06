@@ -15,9 +15,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto"
         }) 
-        console.log("type of localpath", typeof localFilePath)
         // file has been uploaded successfully
-        console.log("file is uploaded on cloudinary", response.url);
         fs.unlinkSync(localFilePath)
         return response
     } catch (error) {
@@ -27,4 +25,19 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export { uploadOnCloudinary}
+
+const deleteImageOnCloudinary = async (url) => {
+    try {
+        if(!url) return null
+
+        const imagePublicId = url.match(/\/([^/]+)\.[a-z]+$/)[1]
+
+        const response = await cloudinary.uploader.destroy(imagePublicId);
+
+        return response
+    } catch (error) {
+        console.log("deletion of Image fail", error)
+    }
+}
+
+export { uploadOnCloudinary, deleteImageOnCloudinary}

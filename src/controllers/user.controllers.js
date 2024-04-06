@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/fileUpload.js";
+import { uploadOnCloudinary, deleteImageOnCloudinary } from "../utils/fileUpload.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -294,12 +294,14 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is missing");
   }
+  const oldAvatar = req.user?.avatar
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
   if (!avatar.url) {
     throw new ApiError(400, "Error while uploading avatar on server");
   }
+  await deleteImageOnCloudinary(oldAvatar)
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -323,11 +325,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Cover Image file is missing");
   }
 
+  const oldCoverImage = req.user?.coverImage
+
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading Cover Image on server");
   }
+
+  await deleteImageOnCloudinary(oldCoverImage)
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -346,6 +352,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   const { userName } = req.params;
+
 
   if (!userName?.trim()) {
     throw new ApiError(400, "userName is missing");
@@ -404,7 +411,9 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!channel?.length()) {
+  console.log("channel: ", channel)
+
+  if (!channel?.length) {
     throw new ApiError(400, "Channel does not exists");
   }
   return res
@@ -420,6 +429,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       $match: {
         _id: new mongoose.Types.ObjectId(req.user._id),
       },
+    },
+    {
       $lookup: {
         from: "videos",
         localField: "watchHistory",
@@ -446,13 +457,13 @@ const getWatchHistory = asyncHandler(async (req, res) => {
           {
             $addFields: {
               owner: {
-                $first: "owner",
+                $first: "$owner",
               },
             },
           },
         ],
       },
-    },
+    }
   ]);
 
   return res
