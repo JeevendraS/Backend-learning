@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary, deleteImageOnCloudinary } from "../utils/fileUpload.js";
+import { uploadOnCloudinary, deleteFileOnCloudinary } from "../utils/fileUpload.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -75,7 +75,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  console.log(avatar);
 
   if (!avatar) {
     throw new ApiError(400, "after cloudinary , Avatar image is required");
@@ -301,7 +300,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   if (!avatar.url) {
     throw new ApiError(400, "Error while uploading avatar on server");
   }
-  await deleteImageOnCloudinary(oldAvatar)
+  await deleteFileOnCloudinary(oldAvatar)
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -333,7 +332,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading Cover Image on server");
   }
 
-  await deleteImageOnCloudinary(oldCoverImage)
+  await deleteFileOnCloudinary(oldCoverImage)
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -425,7 +424,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
 const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
-    {
+    { 
       $match: {
         _id: new mongoose.Types.ObjectId(req.user._id),
       },
