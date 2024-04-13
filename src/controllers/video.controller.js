@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/fileUpload.js";
+import { uploadOnCloudinary, deleteFileOnCloudinary } from "../utils/fileUpload.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -141,12 +141,77 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: update video details like title, description, thumbnail
+  const  thumbnail = req.file?.path
+  const {title, description} = req.body 
+
+  const video = await Video.findById(videoId)
+
+  if(!video){
+    throw new ApiError(400, "something went wrong while fetching video from database")
+  }
+
+  const oldThumbnail = video.thumbnail
+  const newThumbnail = await uploadOnCloudinary(thumbnail)
+
+  if(!newThumbnail.url){
+    throw new ApiError(400, "file upload fail on cloudinary")
+  }
+
+
+  if(thumbnail){
+    video.thumbnail = newThumbnail.url
+  }
+  if(title){
+    video.title = title
+  }
+  if(description){
+    video.description = description
+  }
+  
+  await video.save()
+  await deleteFileOnCloudinary(oldThumbnail)
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, video, "Video updated successfully")
+  )
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: delete video
+
+  console.log(videoId)
+
+  const deletedVideo = await Video.findByIdAndDelete(videoId)
+  console.log(deletedVideo)
+  
+  if(!deletedVideo){
+    throw new ApiError(500, "Video deletion failed or server error")
+  }
+
+  const thumbnail = deletedVideo.thumbnail
+  const videofile = deletedVideo.videoFile
+
+  console.log("videofile url : - ", videofile)
+
+  const t = await deleteFileOnCloudinary(thumbnail)
+  const v = await deleteFileOnCloudinary(videofile)
+
+  console.log("deleted video", deletedVideo, "thumbnail res", t , "video res", v)
+
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, deletedVideo, "Video deleted successfully")
+  )
+
+  // 6619013f132611fe24f0878c
+  // 661901f9607d625c5d7250ac
+  // 661902aa607d625c5d7250b0
+  // 661903387b9ea968ae16ef3f
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
