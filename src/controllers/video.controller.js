@@ -180,12 +180,8 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: delete video
-
-  console.log(videoId)
 
   const deletedVideo = await Video.findByIdAndDelete(videoId)
-  console.log(deletedVideo)
   
   if(!deletedVideo){
     throw new ApiError(500, "Video deletion failed or server error")
@@ -194,28 +190,33 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const thumbnail = deletedVideo.thumbnail
   const videofile = deletedVideo.videoFile
 
-  console.log("videofile url : - ", videofile)
-
   const t = await deleteFileOnCloudinary(thumbnail)
   const v = await deleteFileOnCloudinary(videofile)
-
-  console.log("deleted video", deletedVideo, "thumbnail res", t , "video res", v)
-
 
   return res
   .status(200)
   .json(
     new ApiResponse(200, deletedVideo, "Video deleted successfully")
   )
-
-  // 6619013f132611fe24f0878c
-  // 661901f9607d625c5d7250ac
-  // 661902aa607d625c5d7250b0
-  // 661903387b9ea968ae16ef3f
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+
+  const togglePublishStatus = await Video.findByIdAndUpdate(
+    videoId,
+    { 
+      $set: {
+        isPublished: !video.isPublished
+      }
+    },
+    {new: true}
+  )
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, togglePublishStatus, "Publish status changed successfully")
+  )
 });
 
 export {
