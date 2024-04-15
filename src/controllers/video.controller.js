@@ -7,10 +7,48 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary, deleteFileOnCloudinary } from "../utils/fileUpload.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  const { page = 1, limit = 5, query, sortBy="createdAt", sortType="desc", userId } = req.query;
   //TODO: get all videos based on query, sort, pagination
 
-  const videos = await Video;
+  const skip = (page - 1)* limit
+
+  const pipeline = [
+    {$skip: skip},
+    {$limit: parseInt(limit)},
+  ]
+
+  if(userId){
+    pipeline.push(
+      {
+        $match: {
+          _id: mongoose.Types.ObjectId(userId)
+        }
+      }
+    )
+  }
+  if(sortBy || sortType){
+    pipeline.push(
+      {
+        $sort: {
+          [sortBy]: sortType === "asc"? 1: -1
+        }
+      }
+    )
+  }
+  if(query){
+    pipeline.push(
+      {
+        $match: {
+          title: {
+            $regex: new RegExp(query, "i")
+          }
+        }
+      }
+    )
+  }
+  
+
+  const videos = await Video.aggregate(pipeline)
 
   console.log("videos: ", videos);
 
@@ -203,19 +241,15 @@ const deleteVideo = asyncHandler(async (req, res) => {
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
-  const togglePublishStatus = await Video.findByIdAndUpdate(
-    videoId,
-    { 
-      $set: {
-        isPublished: !video.isPublished
-      }
-    },
-    {new: true}
-  )
+  const video = await Video.findById(videoId)
+  video.isPublished = !video.isPublished
+
+  await video.save()
+
   return res
   .status(200)
   .json(
-    new ApiResponse(200, togglePublishStatus, "Publish status changed successfully")
+    new ApiResponse(200, video, "Publish status changed successfully")
   )
 });
 
