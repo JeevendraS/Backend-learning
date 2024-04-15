@@ -19,8 +19,8 @@ const uploadOnCloudinary = async (localFilePath) => {
         fs.unlinkSync(localFilePath)
         return response
     } catch (error) {
-        console.log("upload fail", error)
         fs.unlinkSync(localFilePath)  // remove the locally saved temporery 
+        console.log("upload fail", error)
                                       //file as the upload operation got failed
     }
 }
@@ -29,15 +29,22 @@ const uploadOnCloudinary = async (localFilePath) => {
 const deleteFileOnCloudinary = async (url) => {
     try {
         if(!url) return null
+        
+        // const filePublicId = url.match(/\/([^/]+)\.[a-z]+$/)[1]
+        const filePublicId = url.split("/").pop().split(".")[0]
 
-        const imagePublicId = url.match(/\/([^/]+)\.[a-z]+$/)[1]
+        if(url.includes("video")){
+            return await cloudinary.uploader.destroy(filePublicId, {
+                resource_type: "video"
+            });
+        }else{
+            return await cloudinary.uploader.destroy(filePublicId);
+        }
 
-        const response = await cloudinary.uploader.destroy(imagePublicId);
-
-        return response
     } catch (error) {
-        console.log("deletion of Image fail", error)
+        console.log("deletion of Image fail", error.message)
     }
 }
+
 
 export { uploadOnCloudinary, deleteFileOnCloudinary}
