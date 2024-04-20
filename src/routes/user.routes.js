@@ -30,7 +30,7 @@ router.route("/register").post(
   ]),
   registerUser
 );
-router.route("/login").post(loginUser);
+router.route("/login").post(loginUser); 
 
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser);
@@ -42,7 +42,7 @@ router.route("/update-account").patch(verifyJWT, updateAccountDetails);
 
 router
   .route("/avatar")
-  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar); 
 router
   .route("/cover-image")
   .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);

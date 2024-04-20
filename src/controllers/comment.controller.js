@@ -25,19 +25,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
 });
 
 const addComment = asyncHandler(async (req, res) => {
-  
+
   const { videoId } = req.params;
   const { content } = req.body;
   const userId = req.user?.id;
-
-  console.log(
-    "videoid:- ",
-    videoId,
-    "userId:- ",
-    userId,
-    "content: -",
-    content
-  );
 
   if (!content) {
     throw new ApiError(400, "comment is required");
