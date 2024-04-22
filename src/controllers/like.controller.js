@@ -17,13 +17,13 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
           },
         },
         {
-          $addFields: {
+          $set: {
             video: {
               $cond: {
                 if: { $eq: [ "$video", null ] },
                 then: videoId,
                 else: null,
-                
+
               },
             },
           },
