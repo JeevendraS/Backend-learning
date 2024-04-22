@@ -8,35 +8,39 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
     const userId = req.user?._id
     //TODO: toggle like on video
+    console.log(videoId)
 
-    const likeDoc = await Like.find({likedBy: userId})
-  
-    if(!likeDoc.length){
-         var likedVideo = await Like.create({
+    const likeDoc = await Like.aggregate([
+        {
+          $match: {
             likedBy: userId,
-            video: videoId
-         })
-    }else {
-        console.log(likeDoc[0].video)
-        if(likeDoc[0].video){
-            likeDoc[0].video = undefined
-            await likeDoc.save()
-        }else{
-            likeDoc[0].video = videoId
-            await likeDoc.save()
-        }
+          },
+        },
+        {
+          $addFields: {
+            video: {
+              $cond: {
+                if: { $eq: [ "$video", null ] },
+                then: videoId,
+                else: null,
+                
+              },
+            },
+          },
+        },
+        // {
+        // $set: {
+        //     video: null
+        // }}
+      ]);
+      
 
-        return res
-        .status(200)
-        .json(
-            new ApiResponse(200, likeDoc, "Video like toggled successfully.")
-        )
-    }
+    console.log(likeDoc) 
 
     return res
-    .status(200) 
+    .status(200)
     .json(
-        new ApiResponse(200, likedVideo, "Video like toggled successfully")
+        new ApiResponse(200, likeDoc, "Video like toggled successfully")
     )
 })
  
