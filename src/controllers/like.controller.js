@@ -1,4 +1,4 @@
-import mongoose, {isValidObjectId} from "mongoose"
+import mongoose, {isValidObjectId} from "mongoose" 
 import {Like} from "../models/like.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
@@ -6,33 +6,32 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
-    const userId = req.user?._id
+    const userId = req.user?._id  
     //TODO: toggle like on video
-    console.log(videoId)
 
     const likeDoc = await Like.aggregate([
-        {
-          $match: {
-            likedBy: userId,
-          },
+      {
+        $match: {
+          likedBy: userId,
         },
-        {
-          $set: {
-            video: {
-              $cond: {
-                if: { $eq: [ "$video", null ] },
-                then: videoId,
-                else: null,
-
+      },
+      {
+        $addFields: {
+          video: {
+            $cond: { 
+              if: {
+                $eq: [
+                  { $ifNull: "$video" }, // Check if "video" field is null or doesn't exist
+                 ]
               },
+              then: videoId, // Set to videoId if any of the conditions is true
+              else: null, // Set to null if none of the conditions is true
             },
           },
         },
-        // {
-        // $set: {
-        //     video: null
-        // }}
-      ]);
+      },
+    ]); 
+    
       
 
     console.log(likeDoc) 
