@@ -7,40 +7,50 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
     const userId = req.user?._id  
-    //TODO: toggle like on video
+    //TODO: toggle like on video 
 
-    const likeDoc = await Like.aggregate([
-      {
-        $match: {
-          likedBy: userId,
-        },
-      },
-      {
-        $addFields: {
-          video: {
-            $cond: { 
-              if: {
-                $eq: [
-                  { $ifNull: "$video" }, // Check if "video" field is null or doesn't exist
-                 ]
-              },
-              then: videoId, // Set to videoId if any of the conditions is true
-              else: null, // Set to null if none of the conditions is true
-            },
-          },
-        },
-      },
-    ]); 
-    
-      
+    const isVideoValid = isValidObjectId(videoId)
 
-    console.log(likeDoc) 
+    if(!isVideoValid){
+      throw new ApiError(400, "VideoId is not valid")
+    }
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, likeDoc, "Video like toggled successfully")
-    )
+    const likeDocument = await Like.findOne({likedBy: userId})
+
+    try {
+      if(!likeDocument){
+        const likedVideo = await Like.create({
+          video: videoId,
+          likedBy: userId
+        })
+  
+        if(!likedVideo){
+          throw new ApiError(400, "Something went wrong or server error")
+        }
+  
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200, likedVideo, "Video liked successfully")
+        )
+      }else{
+        if(!likeDocument.video){
+          likeDocument.video = videoId
+        }else{
+        likeDocument.video = null
+        }
+        await likeDocument.save()
+        
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200, likeDocument, "Video liked toggled successfully")
+        )
+      }
+    } catch (error) {
+      console.log(error);
+      throw new ApiError(400, "something went wront")
+    }
 })
  
 const toggleCommentLike = asyncHandler(async (req, res) => {
