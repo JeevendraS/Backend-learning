@@ -55,18 +55,111 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
  
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params
-    //TODO: toggle like on comment 
+    const userId = req.user?._id
+    
+    const isCommentValid = isValidObjectId(commentId)
+
+    if(!isCommentValid){
+      throw new ApiError(400, "Comment is not valid")
+    }
+
+    const likeDocument = await Like.findOne({likedBy: userId})
+
+    try {
+      if(!likeDocument){
+        const likedComment = await Like.create({
+          comment: commentId,
+          likedBy: userId
+        })
+
+        if(!likedComment){
+          throw new ApiError(400, "something went wrong while creating like document")
+        }
+
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200, likedComment, "Comment liked successfully")
+        )
+      }else{
+        if(!likeDocument.comment){
+          likeDocument.comment = commentId
+        }else{
+          likeDocument.comment = null
+        }
+
+        await likeDocument.save()
+
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200, likeDocument, "Comment like toggled successfully")
+        )
+      }
+    } catch (error) {
+      console.log(error)
+      throw new ApiError(400, "Something went wrong")
+    }
 
 })
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
-    //TODO: toggle like on tweet
-}
+    const userId = req.user?._id
+
+    const isTweetValid = isValidObjectId(tweetId)
+
+    if(!isTweetValid){
+      throw new ApiError(400, "tweet is not valid")
+    }
+
+    const likeDocument = await Like.findOne({ likedBy: userId})
+
+    try {
+      if(!likeDocument){
+        const likedDocument = Like.create({
+          tweet: tweetId,
+          likedBy: userId
+        })
+
+        if(!likedDocument){
+          throw new ApiError(400, "Error while liking the tweet")
+        }
+
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200, likedDocument, "tweet liked successfully")
+        )
+      }else{
+        if(!likeDocument.tweet){
+          likeDocument.tweet = tweetId
+        }else{
+          likeDocument.tweet = null
+        }
+
+        await likeDocument.save()
+
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200, likeDocument, "tweet like toggled successfully")
+        )
+      }
+    } catch (error) {
+      console.log(error); 
+
+      throw new ApiError(400, "something went wrong")
+    }
+
+
+  }
 )
 
 const getLikedVideos = asyncHandler(async (req, res) => {
-    //TODO: get all liked videos
+    const userId = req.user?._id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                                           
+
 })
 
 export {
