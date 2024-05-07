@@ -15,13 +15,17 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const pipeline = [
     {$skip: skip},
     {$limit: parseInt(limit)},
-  ]
+  ] 
+
+  if(userId && !isValidObjectId(userId)){
+    throw new ApiError(400, "Invalid userId")
+  }
 
   if(userId){
     pipeline.push(
       {
         $match: {
-          _id: mongoose.Types.ObjectId(userId)
+          _id: new mongoose.Types.ObjectId(userId)
         }
       }
     )
@@ -50,11 +54,13 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   const videos = await Video.aggregate(pipeline)
 
-  console.log("videos: ", videos);
+  if(!videos){
+    throw new ApiError(400, "Something went wrong while fetching videos")
+  }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, videos, "Account details updated successfully"));
+    .json(new ApiResponse(200, videos, "Videos fetched successfully"));
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -87,6 +93,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
     duration: video.duration,
     owner: userId,
   });
+
+  if(!createdVideo){
+    throw new ApiError(400, "Something went wrong while publishing video")
+  }
 
   const finalVideo = await Video.aggregate([
     {
@@ -121,6 +131,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
     },
   ]);
 
+  if(!finalVideo){
+    throw new ApiError(400, "Something went wrong while fetching video from database")
+  }
+
   return res
     .status(200)
     .json(new ApiResponse(200, finalVideo[0], "video published successfully"));
@@ -129,6 +143,12 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
+
+  const isValidVideoId = isValidObjectId(videoId)
+
+  if(!isValidVideoId){
+    throw new ApiError(400, "Invalid videoId")
+  }
 
   if(!videoId){
     throw new ApiError(400, "Video id is required")
@@ -167,7 +187,9 @@ const getVideoById = asyncHandler(async (req, res) => {
     }
   ])
 
-  console.log(video)
+  if(!video){
+    throw new ApiError(400, "Something went wrong while fetching video from database")
+  }
 
   return res
   .status(200)
@@ -182,11 +204,22 @@ const updateVideo = asyncHandler(async (req, res) => {
   const  thumbnail = req.file?.path
   const {title, description} = req.body 
 
+  const isValidVideoId = isValidObjectId(videoId)
+
+  if(!isValidVideoId){
+    throw new ApiError(400, "Invalid videoId")
+  }
+
   const video = await Video.findById(videoId)
 
   if(!video){
     throw new ApiError(400, "something went wrong while fetching video from database")
   }
+
+  if(video.owner.toString() !== req.user?._id.toString()){
+    throw new ApiError(400, "Only video owner can update the video")
+  }
+
 
   const oldThumbnail = video.thumbnail
   const newThumbnail = await uploadOnCloudinary(thumbnail)
@@ -219,6 +252,22 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
+  const isVideoIdValid = isValidObjectId(videoId)
+
+  if(!isVideoIdValid){
+    throw new ApiError(400, "Invalid videoId")
+  }
+
+  const video = await Video.findById(videoId)
+
+  if(!video){
+    throw new ApiError(400, "Something went wrong or video not found")
+  }
+
+  if(video.owner.toString() !== req.user?._id.toString()){
+    throw new ApiError(400, "Only owner of the video can delete this video")
+  }
+
   const deletedVideo = await Video.findByIdAndDelete(videoId)
   
   if(!deletedVideo){
@@ -241,7 +290,22 @@ const deleteVideo = asyncHandler(async (req, res) => {
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
+  const isVideoIdValid = isValidObjectId(videoId)
+
+  if(!isValidObjectId){
+    throw new ApiError(400, "Invalid VideoId")
+  }
+  
   const video = await Video.findById(videoId)
+
+  if(!video){
+    throw new ApiError(400, "Something went wrong or video not found")
+  }
+
+  if(video.owner.toString() !== req.user?._id.toString()){
+    throw new ApiError(400, "Only owner of the video can toggle public Status")
+  }
+
   video.isPublished = !video.isPublished
 
   await video.save()
