@@ -10,6 +10,12 @@ const createTweet = asyncHandler(async (req, res) => {
     const userId = req.user?._id
     const {content} = req.body
 
+    const isUserIdValid = isValidObjectId(userId)
+
+    if(!isUserIdValid){
+        throw new ApiError(400, "UserId is invalid")
+    }
+
     if(!content){
         throw new ApiError(400, "Content is required")
     }
@@ -18,6 +24,10 @@ const createTweet = asyncHandler(async (req, res) => {
         content,
         owner: userId
     })
+
+    if(!tweet){
+        throw new ApiError(500, "Something went wrong while Posting tweet")
+    }
 
     return res
     .status(200)
