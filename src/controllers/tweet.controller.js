@@ -65,11 +65,16 @@ const updateTweet = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     const {content} = req.body
 
+    const isTweetValid = isValidObjectId(tweetId)
+
+    if(!isTweetValid){
+        throw new ApiError("Tweet is not valid")
+    }
+
     if(!content){
         throw new ApiError(400, "Tweet is required")
     }
-
-    console.log(tweetId);
+    
     const updatedTweet = await Tweet.findByIdAndUpdate(
         tweetId,
         {
