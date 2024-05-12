@@ -74,21 +74,31 @@ const updateTweet = asyncHandler(async (req, res) => {
     if(!content){
         throw new ApiError(400, "Tweet is required")
     }
+
+    const tweet = await Tweet.findById(tweetId)
+
+    if(tweet.owner.toString()!==req.user?._id.toString()){
+        throw new ApiError(400, "Only owner of the tweet can update his tweet")
+    }
     
-    const updatedTweet = await Tweet.findByIdAndUpdate(
-        tweetId,
-        {
-            $set: {
-                content: content
-            }
-        },
-        {new: true}
-    )
+    // const updatedTweet = await Tweet.findByIdAndUpdate(
+    //     tweetId,
+    //     {
+    //         $set: {
+    //             content: content
+    //         }
+    //     },
+    //     {new: true}
+    // )
+
+    tweet.content = content
+
+    await tweet.save()
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200, updatedTweet, "tweet updated successfully")
+        new ApiResponse(200, tweet, "tweet updated successfully")
     )
 })
 
