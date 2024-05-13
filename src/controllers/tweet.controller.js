@@ -81,32 +81,52 @@ const updateTweet = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Only owner of the tweet can update his tweet")
     }
     
-    // const updatedTweet = await Tweet.findByIdAndUpdate(
-    //     tweetId,
-    //     {
-    //         $set: {
-    //             content: content
-    //         }
-    //     },
-    //     {new: true}
-    // )
+    const updatedTweet = await Tweet.findByIdAndUpdate(
+        tweetId,
+        {
+            $set: {
+                content: content
+            }
+        },
+        {new: true}
+    )
 
-    tweet.content = content
+    if(!updatedTweet){
+        throw new ApiError(400, "Something went wrong While updating tweet")
+    }
 
-    await tweet.save()
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200, tweet, "tweet updated successfully")
+        new ApiResponse(200, updateTweet, "tweet updated successfully")
     )
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
-    //TODO: delete tweet
     const {tweetId} = req.params
 
+    const isTweetIdValid = isValidObjectId(tweetId)
+
+    if(!isTweetIdValid){
+        throw new ApiError(400, "Tweet is invalid")
+    }
+
+    const tweet = await Tweet.findById(tweetId)
+
+    if(!tweet){
+        throw new ApiError(400, "Something went wrong while fetching tweet from database")
+    }
+
+    if(tweet.owner.toString()!==req.user?._id.toString()){
+       throw new ApiError(400, "Only owner of the tweet can delete the tweet") 
+    }
+
     const deleteTweet = await Tweet.findByIdAndDelete(tweetId)
+
+    if(!deleteTweet){
+        throw new ApiError(400, "Something went wrong while deleting the tweet")
+    }
 
     return res
     .status(200)
