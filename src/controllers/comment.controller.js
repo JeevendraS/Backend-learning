@@ -38,8 +38,8 @@ const addComment = asyncHandler(async (req, res) => {
 
   const isValidVideoId = isValidObjectId(videoId)
 
-  if(!isValidObjectId){
-    throw new ApiError(400, "Video Id is invalid")
+  if(!isValidVideoId){
+    throw new ApiError(400, "VideoId is invalid")
   }
 
   if (!content) {
@@ -59,12 +59,20 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
+
   const { commentId } = req.params;
   const { updateComment } = req.body;
+
+  const isCommentIdValid = isValidObjectId(commentId)
+
+  if(!isCommentIdValid){
+    throw new ApiError(400, "CommentId is invalid")
+  }
 
   if (!updateComment) {
     throw new ApiError(400, "Comment is required");
   }
+
 
   const comment = await Comment.findByIdAndUpdate(
     commentId,
