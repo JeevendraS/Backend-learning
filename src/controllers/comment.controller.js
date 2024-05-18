@@ -111,7 +111,7 @@ const deleteComment = asyncHandler(async (req, res) => {
   const comment = await Comment.findById(commentId)
 
   if(!comment){
-    throw new ApiError(400, "Something went wrong while fetching comment")
+    throw new ApiError(500, "Something went wrong while fetching comment")
   }
 
   if(comment.owner.toString()!== req.user?._id.toString()){
