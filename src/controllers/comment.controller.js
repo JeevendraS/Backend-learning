@@ -73,6 +73,15 @@ const updateComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Comment is required");
   }
 
+  const isCommentExists = await Comment.findById(commentId)
+
+  if(!isCommentExists){
+    throw new ApiError(400, "comment dose not exists")
+  }
+
+  if(isCommentExists.owner.toString()!==req.user?._id.toString()){
+    throw new ApiError("Only owner can update the comment")
+  }
 
   const comment = await Comment.findByIdAndUpdate(
     commentId,
