@@ -102,8 +102,24 @@ const deleteComment = asyncHandler(async (req, res) => {
   // TODO: delete a comment
   const { commentId } = req.params;
 
-  const deletedComment = await Comment.findByIdAndDelete(commentId);
+  const isValidCommentId = isValidObjectId(commentId)
 
+  if(!isValidCommentId){
+    throw new ApiError(400, "comment Id is invalid")
+  }
+
+  const comment = await Comment.findById(commentId)
+
+  if(!comment){
+    throw new ApiError(400, "Something went wrong while fetching comment")
+  }
+
+  if(comment.owner.toString()!== req.user?._id.toString()){
+    throw new ApiError(400, "Only owner can delete the comment")
+  }
+
+  const deletedComment = await Comment.findByIdAndDelete(commentId);
+ 
   if (!deletedComment) {
     throw new ApiError(500, "Comment deletion failed or server error");
   }
